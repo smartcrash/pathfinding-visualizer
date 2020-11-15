@@ -3,6 +3,13 @@
 @tailwind utilities;
 
 @font-face {
+  font-family: 'Geneva';
+  src: url('./fonts/Geneva.ttf') format('ttf');
+  font-weight: normal;
+  font-style: normal;
+}
+
+@font-face {
   font-family: 'Chicago FLF';
   src: url('./fonts/ChicagoFLF.woff2') format('woff2'),
     url('./fonts/ChicagoFLF.woff') format('woff');

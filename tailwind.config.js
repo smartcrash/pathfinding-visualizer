@@ -5,6 +5,10 @@ module.exports = {
   },
   purge: [],
   theme: {
+    fontFamily: {
+      sans: ['Chicago FLF', 'serif'],
+      serif: ['Chicago FLF', 'serif'],
+    },
     extend: {},
   },
   variants: {},

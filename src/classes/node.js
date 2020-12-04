@@ -1,13 +1,12 @@
 export class Node {
   constructor({
-    _id,
     index,
     distance = Infinity,
     weight = 1,
     wasVisited = false,
-    isWall = false
+    isWall = false,
   } = {}) {
-    this._id = Math.random().toString(36).substr(2, 9);
+    this._id = Math.random().toString(36).substr(2, 9)
     this.index = index
     this.distance = distance
     this.weight = weight
@@ -18,5 +17,14 @@ export class Node {
 
   is(node) {
     return this._id === node._id
+  }
+
+  coordinates(rows, columns) {
+    const { index } = this
+
+    const x = index % columns
+    const y = Math.floor(index / rows)
+
+    return { x, y }
   }
 }

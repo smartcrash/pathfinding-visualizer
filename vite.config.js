@@ -6,7 +6,11 @@ import preactRefresh from '@prefresh/vite'
  */
 const config = {
   jsx: 'preact',
-  plugins: [preactRefresh()]
+  plugins: [preactRefresh()],
+  alias: {
+    react: 'preact/compat',
+    'react-dom': 'preact/compat',
+  },
 }
 
 export default config

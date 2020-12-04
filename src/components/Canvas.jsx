@@ -26,6 +26,8 @@ export function Canvas({
     p5.strokeWeight(1)
 
     if (paused) {
+      index = 0
+
       p5.stroke(180)
       p5.fill(255)
       p5.rect(0, 0, p5.width, p5.height, SIZE / 2)

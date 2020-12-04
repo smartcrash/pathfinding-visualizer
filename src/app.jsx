@@ -5,11 +5,12 @@ import { Canvas } from './components/Canvas'
 import { Grid } from './classes/grid'
 import { Node } from './classes/node'
 
-const grid = new Grid(25, 25, (_, index) => new Node({ index }))
+const createGrid = () => new Grid(25, 25, (_, index) => new Node({ index }))
 
 export function App() {
-  const [start, setStart] = useState(grid.array.get(0, 0))
-  const [end, setEnd] = useState(grid.array.get(2, 0))
+  const [grid, setGrid] = useState(createGrid())
+  const [start, setStart] = useState({ x: 0, y: 0 })
+  const [end, setEnd] = useState({ x: 20, y: 20 })
   const [algorithm, setAlgorithm] = useState(Object.keys(algorithms)[0])
   const [states, setStates] = useState(null)
   const [path, setPath] = useState(null)
@@ -17,10 +18,13 @@ export function App() {
   const [isPaused, setIsPaused] = useState(true)
   const [hasFinished, setHasFinished] = useState(false)
 
+  const getStart = () => grid.array.get(start.y, start.x)
+  const getEnd = () => grid.array.get(end.y, end.x)
+
   const onButtonClick = () => {
     if (isPaused) {
-      const { states, path } = algorithms[algorithm](grid, start, end)
-
+      setGrid(createGrid())
+      const { states, path } = algorithms[algorithm](grid, getStart(), getEnd())
       setStates(states)
       setPath(path)
       setIsPaused(false)
@@ -53,11 +57,11 @@ export function App() {
         paused={isPaused}
         rows={grid.rows}
         columns={grid.columns}
-        start={start}
-        end={end}
+        start={getStart()}
+        end={getEnd()}
         states={states}
         path={path}
-        onClick={({ x, y }) => setEnd(grid.array.get(y, x) || end)}
+        onClick={setEnd}
         onFinish={() => setHasFinished(true)}
       />
     </main>

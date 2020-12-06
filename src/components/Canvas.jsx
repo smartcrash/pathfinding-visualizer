@@ -23,24 +23,26 @@ export function Canvas({
   columns,
   start,
   end,
+  walls,
   states,
   path,
   onFinish = () => null,
   onMouseDragged = () => null,
+  onMouseClicked = () => null,
 }) {
   const mouseDragged = event => {
-    if (isGrabbing) {
-      const hovered = getHovered(event)
+    const hovered = getHovered(event)
 
-      if (hovered)
-        onMouseDragged({
-          ...hovered,
-          node: grabbedNode,
-        })
-    }
+    onMouseDragged({
+      isGrabbing,
+      ...hovered,
+      node: isGrabbing && hovered ?  grabbedNode : null,
+    })
   }
 
   const mouseMoved = event => {
+    if (!paused) return
+
     const hovered = getHovered(event) || {}
     const node = grid.array.get(hovered.y, hovered.x)
 
@@ -50,6 +52,8 @@ export function Canvas({
   }
 
   const mousePressed = event => {
+    if (!paused) return
+
     const hovered = getHovered(event) || {}
     const node = grid.array.get(hovered.y, hovered.x)
 
@@ -66,7 +70,10 @@ export function Canvas({
   }
 
   const mouseClicked = event => {
-    //
+    onMouseClicked({
+      ...(getHovered(event) || {}),
+      isGrabbing,
+    })
   }
 
   const setup = (p5, canvasParentRef) => {
@@ -99,6 +106,12 @@ export function Canvas({
         start.coordinates(rows, columns).y * SIZE + SIZE / 2,
         SIZE / 2
       )
+
+      for (const node of walls) {
+        const { x, y } = node.coordinates(rows, columns)
+        p5.fill(0)
+        p5.rect(x * SIZE, y * SIZE, SIZE)
+      }
 
       return
     }

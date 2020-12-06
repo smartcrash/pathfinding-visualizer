@@ -11,6 +11,44 @@ export function App() {
   const [grid, setGrid] = useState(createGrid())
   const [start, setStart] = useState({ x: 0, y: 0 })
   const [end, setEnd] = useState({ x: 20, y: 20 })
+
+  const isNotStartOrEnd = node => !node.is(getStart()) && !node.is(getEnd())
+
+  const [walls, setWalls] = useState([])
+  const withWalls = (action, node) => {
+    if (action === 'reset') {
+      setWalls([])
+      return
+    }
+
+    if (node && isNotStartOrEnd(node)) {
+      const state = [...walls]
+
+      switch (action) {
+        case 'add':
+          node.isWall = true
+          if (!state.includes(node)) state.push(node)
+          break
+
+        case 'remove':
+          node.isWall = false
+          state.splice(state.indexOf(node), 1)
+          break
+
+        case 'toggle':
+          !(node.isWall = !node.isWall)
+            ? state.splice(state.indexOf(node), 1)
+            : state.push(node)
+          break
+
+        default:
+          throw new Error('Unexpected action')
+      }
+
+      setWalls(state)
+    }
+  }
+
   const [algorithm, setAlgorithm] = useState(Object.keys(algorithms)[0])
   const [states, setStates] = useState(null)
   const [path, setPath] = useState(null)
@@ -32,6 +70,7 @@ export function App() {
     }
 
     if (hasFinished) {
+      withWalls('reset')
       setStates(null)
       setPath(null)
       setIsPaused(true)
@@ -39,8 +78,13 @@ export function App() {
     }
   }
 
-  const onMouseDragged = ({ x, y, node }) => {
-    node === 'start' ? setStart({ x, y }) : setEnd({ x, y })
+  const onMouseDragged = ({ x, y, isGrabbing, node }) => {
+    if (isGrabbing) node === 'start' ? setStart({ x, y }) : setEnd({ x, y })
+    else withWalls('add', grid.array.get(y, x))
+  }
+
+  const onMouseClicked = ({ x, y }) => {
+    withWalls('toggle', grid.array.get(y, x))
   }
 
   return (
@@ -64,10 +108,12 @@ export function App() {
         columns={grid.columns}
         start={getStart()}
         end={getEnd()}
+        walls={walls}
         states={states}
         path={path}
         onFinish={() => setHasFinished(true)}
         onMouseDragged={onMouseDragged}
+        onMouseClicked={onMouseClicked}
       />
     </main>
   )

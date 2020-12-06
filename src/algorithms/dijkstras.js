@@ -19,6 +19,8 @@ export function dijkstras(grid, start, end, { heuristic = () => 0 } = {}) {
     current.wasVisited = true
 
     for (const neighbor of grid.getNeighbors(current.index)) {
+      if (neighbor.isWall) continue
+
       const distance =
         current.distance +
         1 +

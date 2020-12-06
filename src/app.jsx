@@ -39,6 +39,10 @@ export function App() {
     }
   }
 
+  const onMouseDragged = ({ x, y, node }) => {
+    node === 'start' ? setStart({ x, y }) : setEnd({ x, y })
+  }
+
   return (
     <main class="flex items-center justify-center flex-col">
       <h1>{algorithm}</h1>
@@ -55,14 +59,15 @@ export function App() {
 
       <Canvas
         paused={isPaused}
+        grid={grid}
         rows={grid.rows}
         columns={grid.columns}
         start={getStart()}
         end={getEnd()}
         states={states}
         path={path}
-        onClick={setEnd}
         onFinish={() => setHasFinished(true)}
+        onMouseDragged={onMouseDragged}
       />
     </main>
   )

@@ -2,19 +2,73 @@ import React from 'react'
 import Sketch from 'react-p5'
 
 const SIZE = 18
+let isGrabbing = false
+let grabbedNode = null
 let index = 0
+
+const getHovered = ({ mouseX, mouseY, width, height }) => {
+  if (mouseX >= 0 && mouseX <= width && mouseY >= 0 && mouseY <= height) {
+    const y = Math.floor(mouseY / SIZE)
+    const x = Math.floor(mouseX / SIZE)
+    return { x, y }
+  }
+}
+
+const cursor = type => (window.document.body.style.cursor = type)
 
 export function Canvas({
   paused,
+  grid,
   rows,
   columns,
   start,
   end,
   states,
   path,
-  onClick = () => null,
   onFinish = () => null,
+  onMouseDragged = () => null,
 }) {
+  const mouseDragged = event => {
+    if (isGrabbing) {
+      const hovered = getHovered(event)
+
+      if (hovered)
+        onMouseDragged({
+          ...hovered,
+          node: grabbedNode,
+        })
+    }
+  }
+
+  const mouseMoved = event => {
+    const hovered = getHovered(event) || {}
+    const node = grid.array.get(hovered.y, hovered.x)
+
+    if (!node) return
+
+    if (!isGrabbing) cursor(node.is(start) || node.is(end) ? 'grab' : 'default')
+  }
+
+  const mousePressed = event => {
+    const hovered = getHovered(event) || {}
+    const node = grid.array.get(hovered.y, hovered.x)
+
+    if (node && (node.is(start) || node.is(end))) {
+      grabbedNode = node.is(start) ? 'start' : 'end'
+      isGrabbing = true
+      cursor('grabbing')
+    }
+  }
+
+  const mouseReleased = event => {
+    grabbedNode = null
+    isGrabbing = false
+  }
+
+  const mouseClicked = event => {
+    //
+  }
+
   const setup = (p5, canvasParentRef) => {
     p5.createCanvas(rows * SIZE, columns * SIZE).parent(canvasParentRef)
     p5.background(255)
@@ -97,14 +151,15 @@ export function Canvas({
     ++index
   }
 
-  const mouseClicked = ({ mouseX, mouseY, width, height }) => {
-    if (mouseX >= 0 && mouseX <= width && mouseY >= 0 && mouseY <= height) {
-      const y = Math.floor(mouseY / SIZE)
-      const x = Math.floor(mouseX / SIZE)
-
-      onClick({ x, y })
-    }
-  }
-
-  return <Sketch setup={setup} draw={draw} mouseClicked={mouseClicked} />
+  return (
+    <Sketch
+      setup={setup}
+      draw={draw}
+      mouseDragged={mouseDragged}
+      mouseClicked={mouseClicked}
+      mouseMoved={mouseMoved}
+      mousePressed={mousePressed}
+      mouseReleased={mouseReleased}
+    />
+  )
 }

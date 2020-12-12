@@ -1,20 +1,51 @@
 import { useState } from 'preact/hooks'
 
+import { PIXEL_SIZE } from './constants'
 import * as algorithms from './algorithms'
 import { Canvas } from './components/Canvas'
 import { Grid } from './classes/grid'
 import { Node } from './classes/node'
 
 const createGrid = () => new Grid(25, 25, (_, index) => new Node({ index }))
+const setCursor = type => (window.document.body.style.cursor = type)
+const getCoordinates = ({ mouseX, mouseY, width, height }) => {
+  if (mouseX >= 0 && mouseX <= width && mouseY >= 0 && mouseY <= height)
+    return {
+      x: Math.floor(mouseX / PIXEL_SIZE),
+      y: Math.floor(mouseY / PIXEL_SIZE),
+    }
+}
+
+let isDraggingANode = false
+let wasDragging = false
+let draggedNode = null
 
 export function App() {
+  const [isPaused, setIsPaused] = useState(true)
+  const [hasFinished, setHasFinished] = useState(false)
   const [grid, setGrid] = useState(createGrid())
   const [start, setStart] = useState({ x: 0, y: 0 })
   const [end, setEnd] = useState({ x: 20, y: 20 })
-
-  const isNotStartOrEnd = node => !node.is(getStart()) && !node.is(getEnd())
-
+  const [algorithm, setAlgorithm] = useState(Object.keys(algorithms)[0])
+  const [states, setStates] = useState(null)
+  const [path, setPath] = useState(null)
   const [walls, setWalls] = useState([])
+
+  const getStart = () => grid.get(start.y, start.x)
+  const getEnd = () => grid.get(end.y, end.x)
+  const isStartOrEnd = node => node.is(getStart()) || node.is(getEnd())
+  const isNotStartOrEnd = node => !isStartOrEnd(node)
+
+  const getHoveredNode = event => {
+    const coordinates = getCoordinates(event)
+
+    if (!coordinates) return
+
+    const { x, y } = coordinates
+
+    return grid.get(y, x)
+  }
+
   const withWalls = (action, node) => {
     if (action === 'reset') {
       setWalls([])
@@ -49,16 +80,6 @@ export function App() {
     }
   }
 
-  const [algorithm, setAlgorithm] = useState(Object.keys(algorithms)[0])
-  const [states, setStates] = useState(null)
-  const [path, setPath] = useState(null)
-
-  const [isPaused, setIsPaused] = useState(true)
-  const [hasFinished, setHasFinished] = useState(false)
-
-  const getStart = () => grid.array.get(start.y, start.x)
-  const getEnd = () => grid.array.get(end.y, end.x)
-
   const onButtonClick = () => {
     if (isPaused) {
       setGrid(createGrid())
@@ -78,13 +99,53 @@ export function App() {
     }
   }
 
-  const onMouseDragged = ({ x, y, isGrabbing, node }) => {
-    if (isGrabbing) node === 'start' ? setStart({ x, y }) : setEnd({ x, y })
-    else withWalls('add', grid.array.get(y, x))
+  const mouseDragged = event => {
+    wasDragging = true
+
+    const node = getHoveredNode(event)
+
+    if (!isDraggingANode) {
+      withWalls('add', node)
+      return
+    }
+
+    if (!node || node.isWall) return
+
+    const coordinates = node.coordinates(grid.rows, grid.columns)
+
+    if (draggedNode === 'start' && !node.is(getEnd())) setStart(coordinates)
+    else if (!node.is(getStart())) setEnd(coordinates)
   }
 
-  const onMouseClicked = ({ x, y }) => {
-    withWalls('toggle', grid.array.get(y, x))
+  const mouseMoved = event => {
+    if (!isPaused) return
+
+    const node = getHoveredNode(event)
+
+    if (node) setCursor(isStartOrEnd(node) ? 'grab' : 'default')
+  }
+
+  const mousePressed = event => {
+    if (!isPaused) return
+
+    const node = getHoveredNode(event)
+
+    if (node && isStartOrEnd(node)) {
+      isDraggingANode = true
+      draggedNode = node.is(getStart()) ? 'start' : 'end'
+      setCursor('grabbing')
+    }
+  }
+
+  const mouseReleased = () => {
+    isDraggingANode = false
+    draggedNode = null
+  }
+
+  const mouseClicked = event => {
+    if (!wasDragging) withWalls('toggle', getHoveredNode(event))
+
+    wasDragging = false
   }
 
   return (
@@ -112,8 +173,13 @@ export function App() {
         states={states}
         path={path}
         onFinish={() => setHasFinished(true)}
-        onMouseDragged={onMouseDragged}
-        onMouseClicked={onMouseClicked}
+        listeners={{
+          mouseMoved,
+          mouseDragged,
+          mouseClicked,
+          mousePressed,
+          mouseReleased,
+        }}
       />
     </main>
   )

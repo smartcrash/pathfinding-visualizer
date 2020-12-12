@@ -1,11 +1,10 @@
 export function dijkstras(grid, start, end, { heuristic = () => 0 } = {}) {
-  const { rows, columns } = grid
-
   const states = []
   const path = []
   const visited = []
 
   start.distance = 0
+  start.score = heuristic(start, end)
 
   let queue = [start]
   let current
@@ -13,36 +12,33 @@ export function dijkstras(grid, start, end, { heuristic = () => 0 } = {}) {
   while ((current = queue.shift())) {
     if (current.is(end)) break
 
-    const state = { visited: null, neighbors: [] }
+    const state = {
+      current: null,
+      neighbors: [],
+    }
 
     visited.push(current)
-    current.wasVisited = true
 
     for (const neighbor of grid.getNeighbors(current.index)) {
       if (neighbor.isWall) continue
 
-      const distance =
-        current.distance +
-        1 +
-        heuristic(
-          neighbor.coordinates(rows, columns),
-          end.coordinates(rows, columns)
-        )
+      const distance = current.distance + 1
 
       if (distance < neighbor.distance) {
         neighbor.distance = distance
+        neighbor.heuristic = heuristic(neighbor, end)
         neighbor.parent = current
       }
 
-      if (!neighbor.wasVisited && !queue.includes(neighbor)) {
-        queue.push(neighbor)
+      if (!visited.includes(neighbor) && !queue.includes(neighbor)) {
         // TODO: Implement some sort of min heap algorithm
-        queue = queue.sort((a, b) => a.distance - b.distance)
+        queue.push(neighbor)
+        queue = queue.sort((a, b) => a.heuristic - b.heuristic)
         state.neighbors.push(neighbor)
       }
     }
 
-    state.visited = current
+    state.current = current
     states.push(state)
   }
 

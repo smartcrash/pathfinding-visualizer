@@ -1,21 +1,30 @@
 import ndarray from 'ndarray'
 
-const createArray = ([rows, columns], iterator) =>
+import { Node } from './node'
+
+const createArray = ([rows, columns]) =>
   ndarray(
     Array.from({
       length: rows * columns,
-    }).map(iterator),
+    }).map(
+      (_, index) =>
+        new Node({
+          index,
+          x: index % columns,
+          y: Math.floor(index / rows),
+        })
+    ),
     [rows, columns]
   )
 
 const isNotEmpty = value => value !== null && value !== undefined
 
 export class Grid {
-  constructor(rows = 25, columns = 25, iterator = () => {}) {
+  constructor(rows = 25, columns = 25) {
     this.rows = rows
     this.columns = columns
 
-    const array = createArray([rows, columns], iterator)
+    const array = createArray([rows, columns])
     Object.assign(this, array)
     Object.assign(this.__proto__, array.__proto__)
   }

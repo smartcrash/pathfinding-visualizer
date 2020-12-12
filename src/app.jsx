@@ -4,9 +4,8 @@ import { PIXEL_SIZE } from './constants'
 import * as algorithms from './algorithms'
 import { Canvas } from './components/Canvas'
 import { Grid } from './classes/grid'
-import { Node } from './classes/node'
 
-const createGrid = () => new Grid(25, 25, (_, index) => new Node({ index }))
+const createGrid = () => new Grid(50, 50)
 const setCursor = type => (window.document.body.style.cursor = type)
 const getCoordinates = ({ mouseX, mouseY, width, height }) => {
   if (mouseX >= 0 && mouseX <= width && mouseY >= 0 && mouseY <= height)
